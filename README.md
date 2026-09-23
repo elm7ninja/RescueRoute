@@ -130,7 +130,7 @@ heap operations) will be added in Week 2.
 
 | Role | Member | Responsibilities |
 |---|---|---|
-| Algorithm & Optimization Lead | _TBD_ | FIFO scheduler, greedy rule, priority selection, complexity analysis, strategy comparison |
+| Algorithm & Optimization Lead | John  | FIFO scheduler, greedy rule, priority selection, complexity analysis, strategy comparison |
 | Data & Matching Lead | _TBD_ | Input files, validation, compatibility checks, capacity rules, data structures, test data |
 | Product & Quality Lead | _TBD_ | Explainable output, metrics, tests, README, demo materials, CLI polish |
 
