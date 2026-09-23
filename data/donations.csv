@@ -1,0 +1,9 @@
+donation_id,donor_name,food_type,quantity,ready_time,expiry_time,pickup_area
+D-1001,Campus Cafe,prepared_meals,20,0,90,north
+D-1002,Green Grocer,produce,50,5,240,south
+D-1003,Bakery Co,bread,15,10,300,north
+D-1004,Campus Cafe,prepared_meals,30,15,60,north
+D-1005,Party Caterers,prepared_meals,100,20,120,south
+D-1006,Green Grocer,dairy,10,25,180,south
+D-1007,Bakery Co,bread,5,30,400,north
+D-1008,Campus Cafe,prepared_meals,40,35,50,north

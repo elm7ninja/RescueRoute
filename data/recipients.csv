@@ -1,0 +1,5 @@
+recipient_id,org_name,accepted_food_types,capacity,area,closing_time
+R-01,Community Shelter,prepared_meals|dairy,60,north,500
+R-02,Downtown Food Pantry,produce|bread,80,south,500
+R-03,Campus Fridge,prepared_meals|bread,20,north,45
+R-04,Neighbors Pantry,prepared_meals|produce|dairy,90,south,500

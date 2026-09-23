@@ -1,0 +1,5 @@
+volunteer_id,vehicle_capacity,area,available_start,available_end,max_pickups
+V-301,50,north,0,120,3
+V-302,60,south,0,300,4
+V-303,15,north,0,50,2
+V-304,100,south,0,300,2
