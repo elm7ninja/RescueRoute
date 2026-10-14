@@ -1,0 +1,7 @@
+donation_id,donor_name,food_type,quantity,ready_time,expiry_time,pickup_area
+D-2001,Catering Hall,prepared_meals,40,0,240,north
+D-2002,Campus Cafe,prepared_meals,20,10,40,north
+D-2003,Food Truck,prepared_meals,25,15,60,north
+D-2004,Farm Stand,produce,30,20,300,south
+D-2005,Corner Bakery,bread,15,25,200,south
+D-2006,Campus Cafe,prepared_meals,10,30,70,north
