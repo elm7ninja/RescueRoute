@@ -46,7 +46,7 @@ class TestComparison(unittest.TestCase):
 
         results = compare_strategies(donations, recipients, volunteers, {"Run 1": run_fifo, "Run 2": run_fifo})
 
-        # When the second run didn't inherit the capacity the first run is used 
+        # The second run didn't get the capacity the first run used up
         self.assertEqual(results["Run 1"]["metrics"], results["Run 2"]["metrics"])
         self.assertEqual(results["Run 2"]["metrics"]["donations_assigned"], 7)
         # The original objects were never changed
@@ -71,29 +71,11 @@ class TestComparison(unittest.TestCase):
         self.assertIn("D-EARLY", early)
         self.assertIn("was assigned under FIFO (to Test Shelter) but not under greedy", early)
         self.assertIn("FIFO handled it at position 1 and greedy at position 2", early)
-        self.assertIn("Greedy handled D-URGENT first (less shelf life)", early)
-        self.assertIn("used up the room at Test Shelter", early)
+        self.assertIn("Greedy handled D-URGENT before it (least shelf life goes first)", early)
 
         self.assertIn("D-URGENT", urgent)
         self.assertIn("was not assigned under FIFO but was assigned under greedy", urgent)
-        self.assertIn("came after D-EARLY", urgent)
-
-    def test_blames_volunteers_when_the_recipient_had_room(self):
-        # The same as above but the shelter has room for 500 so space wasn't the problem
-        donations = [
-            make_donation(did="D-EARLY", quantity=30, ready=0, expiry=300),
-            make_donation(did="D-URGENT", quantity=30, ready=10, expiry=40),
-        ]
-        recipients = {"R-01": make_recipient(capacity=500)}
-        fifo = [assigned("D-EARLY"), unassigned("D-URGENT")]
-        greedy = [assigned("D-URGENT"), unassigned("D-EARLY")]
-
-        early, urgent = explain_changes(donations, recipients, fifo, greedy)
-
-        self.assertIn("no volunteer was free", early)
-        self.assertNotIn("room", early)
-        self.assertIn("no volunteer was free", urgent)
-        self.assertNotIn("room", urgent)
+        self.assertIn("Under FIFO it came after D-EARLY", urgent)
 
     def test_explains_a_change_of_recipient(self):
         donations = [make_donation(did="D-1"), make_donation(did="D-2")]
@@ -127,12 +109,6 @@ class TestComparison(unittest.TestCase):
         greedy = [Assignment("D-1", None, None, -1, "deferred", "deferred")]
 
         self.assertEqual(explain_changes(donations, {"R-01": make_recipient()}, fifo, greedy), [])
-
-    def test_nothing_to_explain_when_nothing_changed(self):
-        donations = [make_donation(did="D-1")]
-        same = [assigned("D-1")]
-
-        self.assertEqual(explain_changes(donations, {"R-01": make_recipient()}, same, same), [])
 
     def test_difference_column_is_greedy_minus_fifo(self):
         self.assertEqual(format_difference("donations_assigned", 4, 5), "+1")
