@@ -1,12 +1,12 @@
 """
-Calculates the 8 metrics from the brief for one strategy's results, so FIFO
-and greedy can be compared side by side. Returned as a dict.
+Calculates the 8 metrics from the brief for one strategy's results so FIFO
+and greedy can be compared side by side & returned as a dict.
 
 "Urgent" means a shelf life (expiry_time - ready_time) of URGENT_SHELF_LIFE
-minutes or less. Volunteer capacity counts every trip a volunteer can make
+minutes or less. Volunteer capacity counts every trip that a volunteer can make
 (vehicle_capacity * max_pickups).
 
-Complexity: O(D + R + V), one pass over each list.
+O(D + R + V) - one pass over each list.
 """
 
 from typing import Dict, List, Optional
