@@ -16,7 +16,7 @@ from models import Donation, Recipient, Volunteer, Assignment
 
 URGENT_SHELF_LIFE = 60  # minutes
 
-# Metric keys in the order they are printed, with their labels.
+# Metric keys in the order they are printed
 METRIC_LABELS = {
     "donations_received": "Donations received",
     "donations_assigned": "Donations assigned",
@@ -55,7 +55,7 @@ def compute_metrics(
             assigned += 1
             rescued += donation.quantity
         else:
-            # Unassigned and expired donations both count as at risk.
+            # Unassigned and expired donations both count as at risk
             at_risk += donation.quantity
 
         if shelf_life(donation) <= URGENT_SHELF_LIFE:
@@ -63,8 +63,8 @@ def compute_metrics(
             if is_assigned:
                 urgent_assigned += 1
 
-    # Use the original capacity, not remaining_capacity, so the result is the
-    # same whether or not the strategy changed these objects.
+    # Use the original capacity instead of remaining_capacity so the result is the
+    # same whether or not the strategy changed these objects
     recipient_capacity = sum(r.capacity for r in recipients.values())
     volunteer_capacity = sum(v.vehicle_capacity * v.max_pickups for v in volunteers.values())
 
