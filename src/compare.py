@@ -1,13 +1,13 @@
 """
 Compares FIFO and greedy on the same data.
 
-We run each strategy on its own copy of the input because running one uses up
+Runs each strategy on its own copy of the input because running one uses up
 recipient capacity and volunteer pickups so the second one would start with
 less room.
 
 Copying the data and getting the metrics is O(D + R + V) per
-strategy. explain_changes() is O(D + R) per changed
-donation so O(D * (D + R)) is the worst case.
+strategy. explain_changes() is O(D) per changed
+donation so O(D^2) is the worst case.
 """
 
 import copy
@@ -18,7 +18,7 @@ from metrics import METRIC_LABELS, PERCENT_METRICS, URGENT_SHELF_LIFE, compute_m
 
 
 def load_greedy():
-    # Returns run_greedy or None if greedy.py isn't there.
+    # Returns run_greedy or None if greedy.py isn't there
     try:
         from greedy import run_greedy
     except ModuleNotFoundError as exc:
@@ -135,19 +135,16 @@ def explain_changes(
     greedy_assignments: List[Assignment],
 ) -> List[str]:
     """Returns a sentence for every donation that ended up different under greedy."""
-    by_id = {d.donation_id: d for d in donations}
     fifo = {a.donation_id: a for a in fifo_assignments}
     greedy = {a.donation_id: a for a in greedy_assignments}
-    fifo_order = [a.donation_id for a in fifo_assignments]
-    greedy_order = [a.donation_id for a in greedy_assignments]
 
     # Position each strategy handled each donation at 1 = first
     fifo_pos = {}
-    for i, did in enumerate(fifo_order):
-        fifo_pos[did] = i + 1
+    for i, a in enumerate(fifo_assignments):
+        fifo_pos[a.donation_id] = i + 1
     greedy_pos = {}
-    for i, did in enumerate(greedy_order):
-        greedy_pos[did] = i + 1
+    for i, a in enumerate(greedy_assignments):
+        greedy_pos[a.donation_id] = i + 1
 
     lines = []
     for donation in donations:
@@ -159,6 +156,7 @@ def explain_changes(
         f_ok = f.status == "assigned"
         g_ok = g.status == "assigned"
 
+        # Skip it if neither strategy placed it or both placed it the same way
         if not f_ok and not g_ok:
             continue
         if f_ok and g_ok and f.recipient_id == g.recipient_id and f.volunteer_id == g.volunteer_id:
@@ -168,20 +166,31 @@ def explain_changes(
         where = f"FIFO handled it at position {fifo_pos[did]} and greedy at position {greedy_pos[did]}."
 
         if f_ok and not g_ok:
-            # If the donations greedy handled before this one that FIFO handled after it
-            earlier = greedy_order[:greedy_pos[did] - 1]
-            moved_ahead = [x for x in earlier if x in by_id and fifo_pos.get(x, 0) > fifo_pos[did]]
-            why = _why_lost(donation, moved_ahead, earlier, greedy, by_id, recipients)
+            # Donations greedy moved ahead of this one
+            ahead = [x for x in greedy_pos if greedy_pos[x] < greedy_pos[did] and fifo_pos.get(x, 0) > fifo_pos[did]]
+            if ahead:
+                why = (
+                    f"Greedy handled {', '.join(ahead)} before it (least shelf life goes first), "
+                    f"and by then there was no room or volunteer left for it."
+                )
+            else:
+                why = "By the time greedy got to it, there was no room or volunteer left for it."
             lines.append(
                 f"{intro} was assigned under FIFO (to {_org_name(recipients, f.recipient_id)}) "
                 f"but not under greedy. {where} {why}"
             )
 
         elif g_ok and not f_ok:
-            # If the donations FIFO handled before this one that greedy handled after it
-            earlier = fifo_order[:fifo_pos[did] - 1]
-            moved_behind = [x for x in earlier if x in by_id and greedy_pos.get(x, 0) > greedy_pos[did]]
-            why = _why_gained(donation, moved_behind, earlier, fifo, by_id, recipients)
+            # Donations greedy moved behind this one
+            behind = [x for x in fifo_pos if fifo_pos[x] < fifo_pos[did] and greedy_pos.get(x, 0) > greedy_pos[did]]
+            if behind:
+                why = (
+                    f"Under FIFO it came after {', '.join(behind)} and by then there was no room or "
+                    f"volunteer left for it. Greedy handled it before {', '.join(behind)} "
+                    f"(least shelf life goes first), so there was still a match for it."
+                )
+            else:
+                why = "Greedy's order left a match for it that FIFO's didn't."
             lines.append(
                 f"{intro} was not assigned under FIFO but was assigned under greedy "
                 f"(to {_org_name(recipients, g.recipient_id)}). {where} {why}"
@@ -203,87 +212,6 @@ def explain_changes(
             )
 
     return lines
-
-
-def _why_lost(donation, moved_ahead, earlier, decisions, by_id, recipients):
-    did = donation.donation_id
-
-    if _had_room(donation, earlier, decisions, by_id, recipients):
-        # If a recipient still had room so it was the volunteers that ran out
-        if moved_ahead:
-            reason = _reason([by_id[x] for x in moved_ahead], [donation])
-            return (
-                f"Greedy handled {', '.join(moved_ahead)} first ({reason}), and by then no "
-                f"volunteer was free to take {did}."
-            )
-        return f"By the time greedy reached it, no volunteer was free to take {did}."
-
-    # If there's no room left & only blame the donations that went somewhere that takes this food
-    took_room = [x for x in moved_ahead if _went_to_match(decisions[x], donation, recipients)]
-    if not took_room:
-        return f"By the time greedy reached it, every recipient that takes {donation.food_type} was full."
-    places = ", ".join(sorted({_org_name(recipients, decisions[x].recipient_id) for x in took_room}))
-    reason = _reason([by_id[x] for x in took_room], [donation])
-    return (
-        f"Greedy handled {', '.join(took_room)} first ({reason}), which used up the room at "
-        f"{places} that {did} needed."
-    )
-
-
-def _why_gained(donation, moved_behind, earlier, decisions, by_id, recipients):
-    if _had_room(donation, earlier, decisions, by_id, recipients):
-        # If a recipient had room under FIFO too so it was the volunteers that ran out
-        if moved_behind:
-            reason = _reason([donation], [by_id[x] for x in moved_behind])
-            return (
-                f"Under FIFO no volunteer was free by its turn. Greedy moved it ahead of "
-                f"{', '.join(moved_behind)} ({reason}), so a volunteer was still free."
-            )
-        return "Under FIFO no volunteer was free by its turn, and greedy's order left one free."
-
-    # If under FIFO there was no room left then this names the donations that took it
-    took_room = [x for x in moved_behind if _went_to_match(decisions[x], donation, recipients)]
-    if not took_room:
-        return (
-            f"Under FIFO every recipient that takes {donation.food_type} was full by its turn, "
-            f"and greedy's order left room."
-        )
-    places = ", ".join(sorted({_org_name(recipients, decisions[x].recipient_id) for x in took_room}))
-    reason = _reason([donation], [by_id[x] for x in took_room])
-    return (
-        f"Under FIFO it came after {', '.join(took_room)}, which used up the room at {places}. "
-        f"Greedy moved it ahead ({reason}), so there was still room."
-    )
-
-
-def _reason(first, later):
-    # Only says "less shelf life" if that's actually true for all of them
-    if max(shelf_life(d) for d in first) < min(shelf_life(d) for d in later):
-        return "less shelf life"
-    return "higher greedy priority"
-
-
-def _had_room(donation, earlier, decisions, by_id, recipients):
-    # Adds up how much each recipient had already taken before this donation's turn
-    used = {}
-    for x in earlier:
-        a = decisions[x]
-        if a.status == "assigned" and x in by_id:
-            used[a.recipient_id] = used.get(a.recipient_id, 0) + by_id[x].quantity
-
-    # Checks if any recipient that takes this food still had room for it
-    for r in recipients.values():
-        if r.accepts(donation.food_type) and donation.ready_time <= r.closing_time:
-            if r.capacity - used.get(r.recipient_id, 0) >= donation.quantity:
-                return True
-    return False
-
-
-def _went_to_match(decision, donation, recipients):
-    # True if `decision` sent its donation to a recipient that also takes this food
-    if decision.status != "assigned" or decision.recipient_id not in recipients:
-        return False
-    return recipients[decision.recipient_id].accepts(donation.food_type)
 
 
 def _org_name(recipients, recipient_id):
