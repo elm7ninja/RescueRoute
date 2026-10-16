@@ -69,7 +69,13 @@ Greedy does D-2002, D-2006 and D-2003 first since they have the least shelf
 life so all 3 urgent ones get in. That uses 55 of the 60 spots though, so by
 the time greedy gets to D-2001 (40 meals) there's only room for 5. D-2001 came
 in first and had 4 hours of shelf life left, and it still got left out. This is
-our starvation example. This is what greedy prints for it:
+our starvation example & what greedy prints for it:
+
+```
+Donation D-2001 could not be assigned because no compatible recipient had remaining capacity
+before it expires at minute 240. It was deferred: considered after D-2002, D-2006, D-2003, D-2005
+because they had less remaining shelf life under the urgency-first greedy rule.
+```
 
 D-2005 shows up in that list because greedy did handle it first but since it's 
 bread it went to Southside Pantry and didn't take any of the shelter's space.
