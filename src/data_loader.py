@@ -49,6 +49,21 @@ def load_donations(path: str) -> Tuple[Dict[str, Donation], List[str]]:
             issues.append(f"Donation '{did}' rejected: {exc}")
             continue
 
+        required = ("donor_name", "food_type", "pickup_area")
+        missing = [field for field in required if not (row.get(field) or "").strip()]
+
+        if missing:
+            issues.append(
+                f"Donation '{did}' rejected: missing {', '.join(missing)}"
+            )
+            continue
+
+        if ready_time < 0 or expiry_time < 0:
+            issues.append(
+                f"Donation '{did}' rejected: time values cannot be negative"
+            )
+            continue
+
         seen_ids.add(did)
         donations[did] = Donation(
             donation_id=did,
@@ -88,6 +103,23 @@ def load_recipients(path: str) -> Tuple[Dict[str, Recipient], List[str]]:
         accepted = {
             t.strip() for t in row.get("accepted_food_types", "").split("|") if t.strip()
         }
+
+        if not (row.get("org_name") or "").strip():
+            issues.append(f"Recipient '{rid}' rejected: missing org_name")
+            continue
+
+        if not (row.get("area") or "").strip():
+            issues.append(f"Recipient '{rid}' rejected: missing area")
+            continue
+
+        if not accepted:
+            issues.append(f"Recipient '{rid}' rejected: no accepted food types")
+            continue
+
+        if closing_time < 0:
+            issues.append(f"Recipient '{rid}' rejected: negative closing_time")
+            continue
+
         seen_ids.add(rid)
         recipients[rid] = Recipient(
             recipient_id=rid,
@@ -127,6 +159,16 @@ def load_volunteers(path: str) -> Tuple[Dict[str, Volunteer], List[str]]:
             issues.append(f"Volunteer '{vid}' rejected: {exc}")
             continue
 
+        if not (row.get("area") or "").strip():
+            issues.append(f"Volunteer '{vid}' rejected: missing area")
+            continue
+
+        if available_start < 0 or available_end < 0:
+            issues.append(
+                f"Volunteer '{vid}' rejected: negative availability time"
+            )
+            continue
+        
         seen_ids.add(vid)
         volunteers[vid] = Volunteer(
             volunteer_id=vid,
