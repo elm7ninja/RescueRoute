@@ -9,13 +9,13 @@ For our RescueRoute group project, I was responsible for integrating the FIFO an
 
 I also tested and verified the application, wrote and organized the README documentation, prepared our final presentation, and recorded our demonstration video. I coordinated with my teammates to review the final deliverables before submission. Our final automated test suite successfully passed all 29 tests.
 
-## Ian
+## Ian Hernandez
 
 For our RescueRoute group project, I focused on improving data validation and testing. I worked on validating food types and pickup areas to help ensure that the application correctly processed donation and recipient information.
 
 I also reviewed the matching functionality and added five automated tests to improve test coverage. My contributions helped strengthen the reliability of the application and ensure that invalid input data was handled appropriately.
 
-## Andrew
+## Andrew Kasanjian
 
 For our RescueRoute group project, I focused on developing the FIFO-versus-Greedy comparison functionality. I worked on the comparison tools that evaluate both scheduling algorithms using the same datasets and display differences in their performance metrics.
 
