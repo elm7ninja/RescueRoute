@@ -2,45 +2,79 @@
 
 Surplus Food Matching & Pickup Planner — CPSC 335 Group Project
 
-An explainable prototype that matches time-sensitive food donations to
-compatible recipient organizations and volunteer drivers, comparing a FIFO
-baseline against a greedy urgency-first strategy.
+RescueRoute is an explainable Python application that matches time-sensitive food donations
+to compatible recipient organizations and volunteer drivers. It compares a FIFO baseline against 
+a greedy urgency-first scheduling strategy.
 
 > This is an educational prototype. It is not approved for real food-safety,
 > medical, or emergency operations. All sample data is simulated.
 
-## Status: Week 1 (baseline)
+## Project Status
 
-- [x] Repository structure
-- [x] Data model (`src/models.py`)
-- [x] Validation + CSV loading (`src/data_loader.py`)
-- [x] FIFO baseline (`src/fifo.py`)
-- [x] Sample input files (`data/`)
-- [x] 5 initial tests (`tests/test_fifo.py`)
-- [ ] Greedy urgency-first strategy — **Week 2**
-- [ ] Metrics + FIFO-vs-greedy comparison report — **Week 2**
-- [ ] 10 total tests, fairness/starvation case — **Week 2**
-- [ ] Demo video, final report, contribution statements — **Week 3**
+Core application implemented and tested.
+
+- [x] Project structure and data models
+- [x] CSV loading and initial data validation
+- [x] FIFO scheduling algorithm
+- [x] Greedy urgency-first algorithm
+- [x] Explainable assignment and rejection messages
+- [x] FIFO vs. Greedy metrics comparison
+- [x] Automated tests (29 passed)
+- [x] Sample input data
+- [x] Food Type and area validation
+- [x] Final validation and matching review
+- [ ] PowerPoint presentation and demo video
+- [ ] Final report and contribution statements
 
 ## Setup
 
-Requires Python 3.9+, standard library only (no external dependencies for
-the baseline).
+RescueRoute is a collaborative CPSC 335 group project developed in Python.
+
+### Requirements
+
+- Python 3.9 or newer
+- No additional Python libraries required
+
+### Running the Application 
+
+Download the project from our team's GitHub repository:
+
+https://github.com/elm7ninja/RescueRoute
+
+Open the RescueRoute folder in VS Code or another development environment
+
+From the project's root directory, run: 
 
 ```bash
-git clone <your-repo-url>
-cd rescueroute
-python3 -m venv venv && source venv/bin/activate   # optional
-python3 src/main.py
+python src/main.py
 ```
 
-Run the tests:
+The application will display:
+- FIFO scheduling results
+- Greedy urgency-first scheduling results
+- Assignment and rejection explanations
+- FIFO vs. Greedy performance metrics
+
+### Running Automated Tests
+
+RescueRoute uses Python's unittest framework to verify the application's functionality.
+To run the automated tests, open a terminal in the project's root directory and enter:
 
 ```bash
-python3 -m unittest discover -s tests -v
-# or, if pytest is installed:
-python3 -m pytest tests/ -v
+PYTHONPATH=src python -m unittest discover -s tests -p "test_*.py" -v
 ```
+
+The tests cover:
+- Data validation
+- FIFO and Greedy scheduling
+- Recipient and volunteer matching
+- Capacity and availability constraints
+- Performance metrics
+- Edge cases and assignment explanations
+
+All 29 automated tests passed during the latest reported test run.
+
+
 
 ## Data Schema
 
@@ -84,61 +118,230 @@ deterministic and easy to test without real-clock parsing.
 
 ## Algorithms
 
+RescueRoute uses two scheduling algorithms to assign food donations to 
+compatible recipient organizations and volunteer drivers.
+Our application compares FIFO and Greedy urgency-first scheduling 
+to evaluate how different priorities affect assignment decisions. 
+
+
 ### A. FIFO baseline (implemented)
-Processes donations in arrival order (input file order). For each donation,
-assigns the **first feasible** recipient (accepts the food type, has enough
-remaining capacity, and can be reached before both the donation's expiry and
-the recipient's closing time) and the **first feasible** volunteer (enough
-vehicle capacity, available at the donation's ready time, under its max
-pickups). Every donation — matched or not — produces a human-readable
-`decision_reason`.
 
-### B. Greedy urgency-first strategy (Week 2)
-Planned rule (to be finalized in Week 2): **schedule donations with the
-least remaining shelf life first** (`expiry_time - ready_time`); ties broken
-by larger quantity first, then by earlier `ready_time`. Will use a `heapq`
-priority queue keyed on `(remaining_shelf_life, -quantity, ready_time)`.
+The First-In, First-Out (FIFO) algorithm processes donations in arrival order,
+based on their order in the input file.
 
-## Complexity (baseline)
+For each donation, FIFO selects the first feasible recipient and volunteer.
 
-Let `D` = number of donations, `R` = number of recipients, `V` = number of
-volunteers.
+The matching process checks:
+- Whether the recipient accepts the donation's food type
+- Whether the recipient has enough remaining capacity
+- Whether the donation can be scheduled before expiration and recipient closing time
+- Whether a volunteer is available at the scheduled time
+- Whether the volunteer has enough vehicle capacity
+- Whether the volunteer has remaining pickup slots
 
-- Loading/validation: `O(D + R + V)` — one pass per file, set lookups for
-  duplicate-ID detection.
-- FIFO matching: for each of the `D` donations we scan up to `R` recipients,
-  and for a feasible recipient, up to `V` volunteers → **`O(D · (R + V))`**
-  worst case. No sorting step is needed since arrival order is just input
-  order.
-- Space: `O(D + R + V)` for the dictionaries plus `O(D)` for the assignment
-  list.
+Every donation produces a human-readable explanation describing why it was assigned or left unassigned.
 
-A full complexity write-up (including the greedy strategy's `O(D log D)`
-heap operations) will be added in Week 2.
+**Advantages**
+- Simple and predictable scheduling
+- Preserves donation arrival order
+- Easy to implement and explain 
 
-## Data structures used
+** Limitations**
+- Does not consider donation urgency when determining order
+- Earlier donations may use resources needed by more urgent donations
+
+### B. Greedy Urgency-First Strategy (Implemented)
+
+The Greedy algorithm prioritizes donations based on their remaining shelf life instead of their arrival order.
+
+Remaining shelf life is calculated as:
+
+`expiry_time - ready_time`
+
+Our Greedy algorithm follows these priority rules:
+
+1. Donations with the shortest remaining shelf life are processed first.
+2. If two donations have equal shelf life, the larger quantity is prioritized.
+3. If still tied, the donation with the earlier ready time is prioritized.
+4. Original input order is used as the final tie-breaker.
+
+The algorithm uses Python's `heapq` priority queue to organize donations according to urgency.
+
+For each donation, it selects the first feasible recipient and volunteer while checking compatibility, capacity, and time constraints.
+
+The algorithm also generates human-readable explanations describing why donations were assigned, rejected, or deferred.
+
+**Advantages:**
+- Prioritizes time-sensitive donations.
+- Uses an explainable scheduling rule.
+- May help urgent donations receive resources first.
+
+**Limitations:**
+- Does not guarantee a globally optimal schedule.
+- Less urgent donations may be deferred.
+- May produce the same overall results as FIFO.
+
+## Time Complexity
+
+Let:
+- D = Number of donations
+- R = Number of recipients
+- V = Number of volunteers
+
+### Data Loading and Validation 
+
+Time Complexity: `O(D + R + V)`
+
+The application processes donation, recipient, and volunteer records. 
+Dictionaries and sets provide efficient lookups and duplicate detection.
+
+### FIFO Algorithm
+
+Time Complexity: `O(D * (R + V))`
+
+FIFO processes donations in arrival order. For each donation, 
+it searches for the first compatible recipient and volunteer.
+
+In the worst case, the algorithm may examine all recipients and volunteers
+before finding a feasible assignment. 
+
+### Greedy Algorithm
+
+Time Complexity: `O(D log D + D * (R + V) + D^2)`
+
+The Greedy algorithm uses a priority queue to prioritize donations based on remaining shelf life.
+
+- Heap operations require `O(D log D)` total.
+- Recipient and volunteer matching requires `O(D * (R + V))`.
+- Generating deferred-donation explanations can require `O(D^2)` work in the worst case.
+
+### Space Complexity 
+
+The core data structures use `O(D + R + V)` space for donations, recipients, volunteers,
+assignments, and the priority queue.
+
+The Greedy algorithm may additionally produce `O(D^2)` total explanation text in the worst case.
+
+## Data structures Used
 
 | Need | Structure | Reason |
 |---|---|---|
-| Lookup by ID | `dict` | O(1) direct retrieval |
-| Duplicate-ID detection | `set` | O(1) membership testing |
-| Food-type compatibility | `set` | natural set-membership check |
-| FIFO baseline order | `list` | preserves arrival/input order |
-| Assignment history | `list` | ordered audit output |
+| Lookup by ID | `dict` | Fast direct retrieval |
+| Duplicate-ID detection | `set` | Fast membership testing |
+| Food-type compatibility | `set` | Checks accepted food categories |
+| FIFO processing | `list` | Preserves arrival order |
+| Greedy priority selection | `heapq` | Prioritizes donations based on urgency |
+| Assignment history | `list` | Records scheduling decisions |
+| Performance metrics | `dict` | Stores calculated metrics |
 
-## Team
+## Performance Metrics
 
-| Role | Member | Responsibilities |
+RescueRoute calculates eight performance metrics to evaluate and compare FIFO and Greedy scheduling.
+
+The metrics include:
+
+1. Donations received
+2. Donations assigned
+3. Donations unassigned
+4. Food quantity rescued
+5. Food quantity at risk
+6. Urgent rescue rate
+7. Recipient capacity utilization
+8. Volunteer capacity utilization
+
+Urgent donations are defined as having 60 minutes or less of remaining shelf life.
+
+### FIFO vs. Greedy Results
+
+The following results were obtained using our sample dataset:
+
+| Metric | FIFO | Greedy |
+|---|---:|---:|
+| Donations received | 8 | 8 |
+| Donations assigned | 7 | 7 |
+| Donations unassigned | 1 | 1 |
+| Food quantity rescued | 170 | 170 |
+| Food quantity at risk | 100 | 100 |
+| Urgent rescue rate | 100% | 100% |
+| Recipient capacity utilization | 68.0% | 68.0% |
+| Volunteer capacity utilization | 27.4% | 27.4% |
+
+Both strategies produced identical overall metrics using the sample dataset, even though donations were processed in different orders.
+
+Additional test scenarios demonstrate that FIFO and Greedy can produce different assignment outcomes when resources are limited.
+
+Our team's comparison tool, `src/what_changed.py`, provides further explanations of how and why scheduling decisions differ.
+
+To run the comparison tool:
+
+    python src/what_changed.py
+
+To run the tight-capacity scenario:
+
+    python src/what_changed.py data/tight_capacity
+
+## Automated Testing
+
+RescueRoute uses Python's `unittest` framework to verify the application's behavior.
+
+The automated tests cover:
+
+- Successful donation matching
+- Duplicate donation IDs
+- Expired donations
+- Food type and area validation
+- Insufficient recipient capacity
+- Volunteer availability and vehicle capacity
+- Donations competing for limited resources
+- Empty input datasets
+- FIFO and Greedy producing different results
+- Fairness and deferred donations
+- Performance metrics
+- Human-readable assignment explanations
+
+Ian reported that all 29 automated tests passed after adding five validation tests. 
+The final merged version should be tested again before submission.
+
+
+## Team Contributions
+
+| Role | Member | Contributions |
 |---|---|---|
-| Algorithm & Optimization Lead | John  | FIFO scheduler, greedy rule, priority selection, complexity analysis, strategy comparison |
-| Data & Matching Lead | _TBD_ | Input files, validation, compatibility checks, capacity rules, data structures, test data |
-| Product & Quality Lead | Andrew | Explainable output, metrics, tests, README, demo materials, CLI polish |
+| Algorithm & Optimization Lead | John | Integrated FIFO and Greedy into main.py, added the metrics comparison display, ran automated tests, and updated the README documentation |
+| Data & Matching Lead | Ian | Added food type and area validation, reviewed matching logic, and expanded automated testing with five additional tests |
+| Product & Quality Lead | Andrew | Developed the FIFO vs. Greedy comparison tool, added explanations for scheduling differences, and completed the comparison report |
 
-All members participate in design discussion, code review, debugging,
-testing, and documentation review.
+All three team members contributed to developing, reviewing, and testing the RescueRoute application.
 
-## Limitations (Week 1)
+## Limitations
 
-- Pickup area is stored but not yet enforced as a hard matching constraint.
-- Only the FIFO baseline exists; no strategy comparison yet.
-- No fairness/starvation analysis yet (planned for Week 2 testing).
+RescueRoute is an educational prototype with several limitations:
+
+- All project data is simulated.
+- The application does not calculate actual driving distances or travel times.
+- Greedy scheduling does not guarantee a globally optimal solution.
+- Less urgent donations may be deferred when resources are limited.
+- The application currently uses a command-line interface instead of a graphical dashboard.
+- RescueRoute is not approved for real-world food-safety or emergency operations.
+
+## Future Improvements
+
+Possible future improvements include:
+
+- Real-time route planning and distance calculations
+- An interactive web dashboard
+- Additional fairness rules
+- Improved scheduling optimization
+- Real-time volunteer availability tracking
+- More realistic scheduling constraints
+
+## Conclusion
+
+RescueRoute demonstrates how FIFO and Greedy scheduling algorithms can help 
+coordinate time-sensitive surplus food donations. 
+
+By comparing both algorithms, our team explored how scheduling priorities, resource constraints,
+and data structures influence donation assignments. 
+
+The project highlights the importance of algorithm efficiency, explainable decisions, and automated testing. 
+
