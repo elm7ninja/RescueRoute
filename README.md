@@ -345,3 +345,6 @@ and data structures influence donation assignments.
 
 The project highlights the importance of algorithm efficiency, explainable decisions, and automated testing. 
 
+## Final Presentation and Demo
+- [Final Presentation](docs/RescueRoute_Final_Presentation.pdf)
+- [Demo Video](https://drive.google.com/file/d/1mtZrqXZrCWwmMGQYyZC-5z6JlUxK1cXE/view?usp=sharing)
