@@ -23,8 +23,8 @@ Core application implemented and tested.
 - [x] Sample input data
 - [x] Food Type and area validation
 - [x] Final validation and matching review
-- [ ] PowerPoint presentation and demo video
-- [ ] Final report and contribution statements
+- [x] PowerPoint presentation and demo video
+- [x] Final report and contribution statements
 
 ## Setup
 
