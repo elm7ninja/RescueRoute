@@ -348,3 +348,4 @@ The project highlights the importance of algorithm efficiency, explainable decis
 ## Final Presentation and Demo
 - [Final Presentation](docs/RescueRoute_Final_Presentation.pdf)
 - [Demo Video](https://drive.google.com/file/d/1mtZrqXZrCWwmMGQYyZC-5z6JlUxK1cXE/view?usp=sharing)
+- [Individual Contribution Statements](docs/comparison_report.md)
